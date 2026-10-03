@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>J-CITY - Wiki</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      background: #0d0d0f;
+      min-height: 100vh;
+      font-family: 'Bahnschrift', system-ui, -apple-system, 'Helvetica Neue', sans-serif;
+      color: #d5d5da;
+      overflow-x: hidden;
+    }
+
+    .bg-lines {
+      position: fixed; top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: #0d0d0f; z-index: 0;
+      pointer-events: none;
+    }
+    .bg-lines canvas { display: block; width: 100%; height: 100%; }
+
+    .falling-emojis {
+      position: fixed; top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      z-index: 1; pointer-events: none; overflow: hidden;
+    }
+    .falling-emojis img {
+      position: absolute; top: -80px;
+      user-select: none; will-change: transform;
+      animation: fall linear infinite;
+      filter: blur(0.4px); opacity: 0.22;
+      image-rendering: auto;
+    }
+    @keyframes fall {
+      0%   { transform: translateY(-80px) rotate(0deg) scale(1); opacity: 0.28; }
+      70%  { opacity: 0.22; }
+      100% { transform: translateY(calc(100vh + 140px)) rotate(360deg) scale(1.15); opacity: 0.06; }
+    }
+
+    .page {
+      position: relative;
+      z-index: 2;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .wiki-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding: 1.1rem 2rem;
+      border-bottom: 1px solid rgba(220, 60, 60, 0.25);
+      background: rgba(13, 13, 15, 0.72);
+      backdrop-filter: blur(6px);
+      position: sticky;
+      top: 0;
+      z-index: 60;
+      box-shadow: 0 0 40px rgba(155, 0, 0, 0.15);
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      user-select: none;
+    }
+
+    .logo-icon {
+      font-size: 1.6rem;
+      color: rgba(220, 60, 60, 0.95);
+      width: 46px; height: 46px;
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid rgba(220, 60, 60, 0.4);
+      border-radius: 50%;
+      box-shadow: 0 0 22px rgba(200, 40, 40, 0.25);
+      background: rgba(20, 8, 8, 0.6);
+    }
+
+    .logo-text {
+      font-weight: 800;
+      font-size: 1.6rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      line-height: 1;
+      text-shadow: 0 0 30px rgba(155, 0, 0, 0.5);
+    }
+    .logo-text .red   { color: rgba(220, 60, 60, 0.95); }
+    .logo-text .white { color: #ffffff; }
+
+    .search-wrapper {
+      position: relative;
+      flex: 0 1 440px;
+      min-width: 220px;
+    }
+
+    .search-area {
+      display: flex;
+      align-items: center;
+      background: rgba(20, 20, 24, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 4px;
+      padding: 0.2rem 0.2rem 0.2rem 1rem;
+      transition: 0.25s;
+    }
+
+    .search-area:focus-within {
+      border-color: rgba(220, 60, 60, 0.7);
+      box-shadow: 0 0 0 2px rgba(220, 60, 60, 0.15), 0 0 22px rgba(200, 40, 40, 0.2);
+    }
+
+    .search-area > i.fa-search {
+      color: #6f6f78;
+      font-size: 0.95rem;
+    }
+
+    .search-area input {
+      background: transparent;
+      border: none;
+      padding: 0.65rem 0.8rem;
+      color: #eee;
+      font-size: 0.9rem;
+      letter-spacing: 0.04em;
+      width: 100%;
+      outline: none;
+      font-family: inherit;
+    }
+    .search-area input::placeholder {
+      color: #5c5c66;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 0.78rem;
+    }
+
+    .search-area button {
+      background: rgba(200, 40, 40, 0.85);
+      border: none;
+      color: #fff;
+      padding: 0.55rem 1.1rem;
+      border-radius: 3px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-size: 0.74rem;
+      font-family: inherit;
+    }
+    .search-area button:hover {
+      background: rgba(220, 60, 60, 1);
+      box-shadow: 0 0 22px rgba(220, 60, 60, 0.5);
+    }
+
+    .clear-search {
+      background: transparent !important;
+      border: none;
+      color: #6f6f78 !important;
+      cursor: pointer;
+      padding: 0.5rem 0.6rem !important;
+      font-size: 0.85rem;
+      display: none;
+      box-shadow: none !important;
+    }
+    .clear-search:hover {
+      color: rgba(220, 60, 60, 0.95) !important;
+      background: transparent !important;
+    }
+    .clear-search.visible { display: block; }
+
+    .search-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0; right: 0;
+      background: rgba(18, 18, 22, 0.97);
+      border-radius: 6px;
+      border: 1px solid rgba(220, 60, 60, 0.3);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.7), 0 0 30px rgba(155, 0, 0, 0.15);
+      max-height: 420px;
+      overflow-y: auto;
+      display: none;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+    }
+    .search-dropdown.visible { display: block; }
+
+    .search-result-item {
+      padding: 0.85rem 1.15rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      cursor: pointer;
+      transition: 0.15s;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .search-result-item:last-child { border-bottom: none; }
+    .search-result-item:hover {
+      background: rgba(220, 60, 60, 0.08);
+      border-left: 3px solid rgba(220, 60, 60, 0.8);
+      padding-left: calc(1.15rem - 3px);
+    }
+    .search-result-item i {
+      color: rgba(220, 60, 60, 0.9);
+      font-size: 0.95rem;
+      margin-top: 3px;
+      width: 18px;
+      flex-shrink: 0;
+    }
+    .search-result-content { flex: 1; min-width: 0; }
+    .search-result-title {
+      font-weight: 600;
+      color: #fff;
+      font-size: 0.92rem;
+      margin-bottom: 3px;
+      letter-spacing: 0.02em;
+    }
+    .search-result-title mark {
+      background: rgba(220, 60, 60, 0.35);
+      color: #fff;
+      padding: 0 3px;
+      border-radius: 2px;
+    }
+    .search-result-desc {
+      font-size: 0.79rem;
+      color: #8a8a92;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      line-height: 1.45;
+    }
+    .search-result-desc mark {
+      background: rgba(220, 60, 60, 0.35);
+      color: #eee;
+      padding: 0 2px;
+      border-radius: 2px;
+    }
+    .search-result-type {
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: rgba(220, 60, 60, 0.95);
+      background: rgba(220, 60, 60, 0.12);
+      padding: 3px 9px;
+      border-radius: 3px;
+      flex-shrink: 0;
+      margin-top: 2px;
+      border: 1px solid rgba(220, 60, 60, 0.25);
+    }
+
+    .search-empty {
+      padding: 1.8rem;
+      text-align: center;
+      color: #6f6f78;
+      font-size: 0.85rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .search-empty i {
+      display: block;
+      font-size: 1.8rem;
+      color: rgba(220, 60, 60, 0.4);
+      margin-bottom: 10px;
+    }
+
+    .wiki-container {
+      display: flex;
+      flex: 1;
+      max-width: 1440px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 1.6rem 1.4rem;
+      gap: 1.8rem;
+    }
+
+    .sidebar {
+      width: 230px;
+      flex-shrink: 0;
+      background: rgba(18, 18, 22, 0.72);
+      border-radius: 6px;
+      padding: 1.4rem 0.8rem;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      height: fit-content;
+      position: sticky;
+      top: 5.2rem;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 0 30px rgba(0,0,0,0.4);
+    }
+
+    .sidebar h3 {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.22em;
+      color: #6f6f78;
+      padding-left: 14px;
+      margin-bottom: 1rem;
+      font-weight: 400;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .sidebar li a {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 0.7rem 1rem;
+      color: #b0b0b8;
+      text-decoration: none;
+      border-radius: 4px;
+      font-weight: 400;
+      transition: 0.15s;
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-left: 2px solid transparent;
+    }
+    .sidebar li a i {
+      width: 18px;
+      color: rgba(220, 60, 60, 0.7);
+      font-size: 0.9rem;
+    }
+    .sidebar li a:hover {
+      background: rgba(220, 60, 60, 0.06);
+      color: #fff;
+      border-left-color: rgba(220, 60, 60, 0.5);
+    }
+    .sidebar li a.active {
+      background: rgba(220, 60, 60, 0.12);
+      color: #fff;
+      border-left-color: rgba(220, 60, 60, 1);
+      box-shadow: inset 0 0 20px rgba(220, 60, 60, 0.08);
+    }
+    .sidebar li a.active i { color: rgba(220, 60, 60, 1); }
+
+    .main-content { flex: 1; min-width: 0; }
+
+    .section-block {
+      background: rgba(18, 18, 22, 0.72);
+      border-radius: 6px;
+      padding: 1.8rem;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      margin-bottom: 1.8rem;
+      scroll-margin-top: 5.5rem;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 0 30px rgba(0,0,0,0.35);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid rgba(220, 60, 60, 0.18);
+    }
+
+    .section-header h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .section-header h2 i {
+      color: rgba(220, 60, 60, 0.95);
+      font-size: 1rem;
+    }
+
+    .slider-controls { display: flex; gap: 8px; }
+
+    .slider-controls button {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      width: 38px; height: 38px;
+      border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      color: #b0b0b8;
+      transition: 0.2s;
+      font-size: 0.9rem;
+    }
+    .slider-controls button:hover {
+      background: rgba(220, 60, 60, 0.15);
+      border-color: rgba(220, 60, 60, 0.6);
+      color: #fff;
+      box-shadow: 0 0 18px rgba(220, 60, 60, 0.3);
+    }
+
+    .slides-wrapper {
+      overflow: hidden;
+      border-radius: 4px;
+    }
+
+    .slides-track {
+      display: flex;
+      transition: transform 0.4s ease;
+    }
+
+    .slide {
+      min-width: 100%;
+      background: linear-gradient(145deg, rgba(24, 24, 28, 0.9), rgba(16, 16, 19, 0.9));
+      border-radius: 4px;
+      padding: 2rem 2rem 2rem 2.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-left: 3px solid rgba(220, 60, 60, 0.8);
+      box-shadow: inset 0 0 40px rgba(155, 0, 0, 0.05);
+    }
+
+    .slide-icon {
+      font-size: 2rem;
+      color: rgba(220, 60, 60, 0.95);
+      margin-bottom: 0.2rem;
+      text-shadow: 0 0 25px rgba(220, 60, 60, 0.5);
+    }
+
+    .slide h3 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.2;
+      letter-spacing: 0.04em;
+      text-shadow: 0 0 30px rgba(155, 0, 0, 0.3);
+    }
+
+    .slide p {
+      color: #b0b0b8;
+      font-size: 1rem;
+      line-height: 1.65;
+      max-width: 85%;
+      font-weight: 300;
+    }
+
+    .slide-tag {
+      display: inline-block;
+      background: rgba(220, 60, 60, 0.12);
+      color: rgba(220, 60, 60, 0.95);
+      padding: 0.25rem 1rem;
+      border-radius: 3px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-top: 0.5rem;
+      width: fit-content;
+      border: 1px solid rgba(220, 60, 60, 0.3);
+    }
+
+    .slider-dots {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 1.5rem;
+    }
+
+    .dot {
+      width: 22px; height: 3px;
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 2px;
+      cursor: pointer;
+      transition: 0.25s;
+      border: none;
+      padding: 0;
+    }
+    .dot.active {
+      background: rgba(220, 60, 60, 0.95);
+      box-shadow: 0 0 12px rgba(220, 60, 60, 0.7);
+      width: 36px;
+    }
+
+    .article-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .article {
+      background: rgba(22, 22, 26, 0.75);
+      border-radius: 4px;
+      padding: 1.4rem 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-left: 2px solid rgba(220, 60, 60, 0.4);
+      transition: 0.2s;
+    }
+    .article:hover {
+      border-color: rgba(220, 60, 60, 0.4);
+      border-left-color: rgba(220, 60, 60, 1);
+      background: rgba(28, 22, 22, 0.85);
+      box-shadow: 0 0 30px rgba(155, 0, 0, 0.12);
+      transform: translateX(3px);
+    }
+
+    .article.hidden-by-search,
+    .history-item.hidden-by-search { display: none; }
+
+    .article-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 0.8rem;
+    }
+    .article-header i {
+      font-size: 1.15rem;
+      color: rgba(220, 60, 60, 0.95);
+      background: rgba(220, 60, 60, 0.1);
+      border: 1px solid rgba(220, 60, 60, 0.25);
+      width: 40px; height: 40px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+    .article-header h3 {
+      font-size: 1.1rem;
+      color: #fff;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    .article p {
+      color: #a8a8b0;
+      line-height: 1.7;
+      font-size: 0.93rem;
+      margin-bottom: 0.9rem;
+      font-weight: 300;
+    }
+
+    .article-meta {
+      display: flex;
+      gap: 18px;
+      font-size: 0.72rem;
+      color: #6f6f78;
+      flex-wrap: wrap;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .article-meta span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .article-meta i {
+      color: rgba(220, 60, 60, 0.7);
+      font-size: 0.75rem;
+    }
+
+    .history-timeline {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .history-item {
+      display: flex;
+      gap: 18px;
+      padding: 1.2rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      transition: 0.2s;
+    }
+    .history-item:last-child { border-bottom: none; }
+    .history-item:hover {
+      background: rgba(220, 60, 60, 0.04);
+      padding-left: 8px;
+      padding-right: 8px;
+      border-radius: 4px;
+    }
+
+    .history-icon {
+      flex-shrink: 0;
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      background: rgba(220, 60, 60, 0.1);
+      color: rgba(220, 60, 60, 0.95);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      border: 1px solid rgba(220, 60, 60, 0.3);
+    }
+
+    .history-content { flex: 1; min-width: 0; }
+
+    .history-top {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 5px;
+    }
+
+    .history-title {
+      font-weight: 600;
+      color: #fff;
+      font-size: 0.98rem;
+      letter-spacing: 0.03em;
+    }
+
+    .history-date {
+      font-size: 0.7rem;
+      color: #8a8a92;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 3px 10px;
+      border-radius: 3px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .history-desc {
+      color: #a8a8b0;
+      font-size: 0.88rem;
+      line-height: 1.6;
+      font-weight: 300;
+    }
+
+    .history-author {
+      font-size: 0.75rem;
+      color: rgba(220, 60, 60, 0.9);
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 6px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .search-info {
+      display: none;
+      background: rgba(220, 60, 60, 0.08);
+      border: 1px solid rgba(220, 60, 60, 0.3);
+      border-radius: 4px;
+      padding: 0.9rem 1.3rem;
+      margin-bottom: 1.4rem;
+      color: rgba(220, 60, 60, 0.95);
+      font-size: 0.82rem;
+      letter-spacing: 0.06em;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      text-transform: uppercase;
+    }
+    .search-info.visible { display: flex; }
+    .search-info strong { color: #fff; font-weight: 700; }
+
+    .search-info button {
+      background: transparent;
+      border: 1px solid rgba(220, 60, 60, 0.5);
+      color: rgba(220, 60, 60, 0.95);
+      padding: 0.35rem 1rem;
+      border-radius: 3px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      transition: 0.2s;
+      font-family: inherit;
+    }
+    .search-info button:hover {
+      background: rgba(220, 60, 60, 0.9);
+      color: #fff;
+      border-color: rgba(220, 60, 60, 0.9);
+      box-shadow: 0 0 20px rgba(220, 60, 60, 0.4);
+    }
+
+    .wiki-footer {
+      text-align: center;
+      padding: 1.2rem;
+      margin-top: auto;
+      font-size: 0.72rem;
+      color: #5c5c66;
+      border-top: 1px solid rgba(220, 60, 60, 0.15);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      background: rgba(13, 13, 15, 0.7);
+      backdrop-filter: blur(6px);
+    }
+    .wiki-footer a {
+      color: rgba(220, 60, 60, 0.9);
+      text-decoration: none;
+    }
+    .wiki-footer a:hover { text-shadow: 0 0 12px rgba(220, 60, 60, 0.7); }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0d0d0f; }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(220, 60, 60, 0.4);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(220, 60, 60, 0.7); }
+
+    @media (max-width: 900px) {
+      .wiki-container {
+        flex-direction: column;
+        padding: 1rem;
+        gap: 1.2rem;
+      }
+      .sidebar {
+        width: 100%;
+        position: static;
+        padding: 0.9rem;
+      }
+      .sidebar ul {
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+      .sidebar li a {
+        padding: 0.55rem 0.9rem;
+        font-size: 0.75rem;
+      }
+      .wiki-header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+        padding: 1rem;
+      }
+      .search-wrapper { flex: 1 1 100%; }
+      .logo-text { font-size: 1.35rem; }
+      .slide p { max-width: 100%; }
+      .slide h3 { font-size: 1.3rem; }
+    }
+
+    @media (max-width: 480px) {
+      .slide { padding: 1.4rem; }
+      .section-block { padding: 1.1rem; }
+      .logo-icon { width: 38px; height: 38px; font-size: 1.3rem; }
+      .logo-text { font-size: 1.15rem; }
+      .article { padding: 1.1rem; }
+      .history-item { gap: 12px; }
+      .history-icon { width: 36px; height: 36px; font-size: 0.85rem; }
+      .section-header h2 { font-size: 0.95rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-lines">
+    <canvas id="bgCanvas"></canvas>
+  </div>
+
+  <div class="falling-emojis" id="fallingEmojis"></div>
+
+  <div class="page">
+
+    <header class="wiki-header">
+      <div class="logo-area">
+        <div class="logo-icon"><i class="fas fa-book-open"></i></div>
+        <div class="logo-text">
+          <span class="red">J</span><span class="white">-CITY</span>
+        </div>
+      </div>
+
+      <div class="search-wrapper">
+        <div class="search-area">
+          <i class="fas fa-search"></i>
+          <input type="text" id="searchInput" placeholder="Поиск..." autocomplete="off">
+          <button class="clear-search" id="clearSearch" title="Очистить"><i class="fas fa-times"></i></button>
+          <button id="searchBtn">Найти</button>
+        </div>
+        <div class="search-dropdown" id="searchDropdown"></div>
+      </div>
+    </header>
+
+    <div class="wiki-container">
+
+      <aside class="sidebar">
+        <h3>Навигация</h3>
+        <ul>
+          <li><a href="#slides" class="active"><i class="fas fa-layer-group"></i> Слайды</a></li>
+          <li><a href="#articles"><i class="fas fa-file-alt"></i> Действия</a></li>
+          <li><a href="#history"><i class="fas fa-history"></i> Правила</a></li>
+        </ul>
+      </aside>
+
+      <main class="main-content">
+
+        <div class="search-info" id="searchInfo">
+          <span>Поиск: <strong id="searchQueryInfo"></strong> — найдено <strong id="searchCountInfo">0</strong></span>
+          <button id="resetSearchBtn"><i class="fas fa-times"></i> Сброс</button>
+        </div>
+
+        <section class="section-block" id="slides">
+          <div class="section-header">
+            <h2><i class="fas fa-images"></i> Рандомные слайды</h2>
+            <div class="slider-controls">
+              <button id="prevSlide" aria-label="Назад"><i class="fas fa-chevron-left"></i></button>
+              <button id="nextSlide" aria-label="Вперёд"><i class="fas fa-chevron-right"></i></button>
+            </div>
+          </div>
+
+          <div class="slides-wrapper">
+            <div class="slides-track" id="slidesTrack">
+              <div class="slide" data-searchable>
+                <div class="slide-icon"><i class="fas fa-skull"></i></div>
+                <h3>Добро пожаловать на мой сервер: J-CITY</h3>
+                <p>Самый разнообразный сервер Z-City за все время! До этого сервера был еще сервер но назвали его SNB-RU, пока он не вканул ленту...</p>
+              </div>
+              <div class="slide" data-searchable>
+                <div class="slide-icon"><i class="fas fa-terminal"></i></div>
+                <h3>Базовый экскурс по вики...</h3>
+                <p>Каждая ячейка — фрагмент общей картины. Используй поиск, чтобы найти нужное.</p>
+              </div>
+              <div class="slide" data-searchable>
+                <div class="slide-icon"><i class="fas fa-users-slash"></i></div>
+                <h3>Сообщество</h3>
+                <p>Чтобы присоединится к этому сообществу, вы можете подключится к discord-у: https://discord.gg/ab4b8Ue7qe.</p>
+              </div>
+              <div class="slide" data-searchable>
+                <div class="slide-icon"><i class="fas fa-eye"></i></div>
+                <h3>ИЗУЧИ ПРАВИЛА! АТО ВОНЯТЬ БУДЕШЬ.</h3>
+                <p>Прочитай все правила, нам же на них не похуй)</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="slider-dots" id="sliderDots">
+            <button class="dot active" data-index="0"></button>
+            <button class="dot" data-index="1"></button>
+            <button class="dot" data-index="2"></button>
+            <button class="dot" data-index="3"></button>
+          </div>
+        </section>
+
+        <section class="section-block" id="articles">
+          <div class="section-header">
+            <h2><i class="fas fa-file-alt"></i> Как играть на сервере?</h2>
+          </div>
+          <div class="article-list" id="articleList">
+
+            <article class="article" data-searchable>
+              <div class="article-header">
+                <i class="fas fa-atom"></i>
+                <h3>Как за респавнится в режиме Sandbox?</h3>
+              </div>
+              <p>Все очень легко! Ждите внутреннего таймера, ЛИБО напишите в консоли (при нажатии на ~) своей игры комманду: zbox_respawn</p>
+              <div class="article-meta">
+              </div>
+            </article>
+
+            <article class="article" data-searchable>
+              <div class="article-header">
+                <i class="fas fa-dna"></i>
+                <h3>Не понятное управление?</h3>
+              </div>
+              <p>Вы можете спокойно зайти в ESC меню и там найти вкладку Setting там все важные геймплейные аспекты, только есть проблема. Если ты не знаешь иностранный язык, то придется его учить)</p>
+              <div class="article-meta">
+              </div>
+            </article>
+
+            <article class="article" data-searchable>
+              <div class="article-header">
+                <i class="fas fa-robot"></i>
+                <h3>ERROR или Розовые текстурки?</h3>
+              </div>
+              <p>Сервер автоматически скачивает весь базовый контент, НО если все равно у вас есть проблемы то вы можете скачать контент вот здесь: https://steamcommunity.com/sharedfiles/filedetails/?id=3670490272</p>
+              <div class="article-meta">
+              </div>
+            </article>
+
+            <article class="article" data-searchable>
+              <div class="article-header">
+                <i class="fas fa-globe-americas"></i>
+                <h3>Удобный мут на колесико мыши!</h3>
+              </div>
+              <p>Можете с помощью колесико мыши уменьшать и прибовлять звук игрока)</p>
+              <div class="article-meta">
+              </div>
+            </article>
+
+          </div>
+        </section>
+
+        //govno
+        <section class="section-block" id="history">
+          <div class="section-header">
+            <h2><i class="fas fa-history"></i> Правила сервера</h2>
+          </div>
+
+          <div class="history-timeline" id="historyList">
+
+            <div class="history-item" data-searchable>
+              <div class="history-icon"><i class="fas fa-edit"></i></div>
+              <div class="history-content">
+                <div class="history-top">
+                  <span class="history-title">Оскорбление, (Администрации, дискриминация проекта)</span>
+                </div>
+                <div class="history-desc">Карается баном от 15 минут до 7 дней</div>
+              </div>
+            </div>
+
+            <div class="history-item" data-searchable>
+              <div class="history-icon"><i class="fas fa-plus-circle"></i></div>
+              <div class="history-content">
+                <div class="history-top">
+                  <span class="history-title">Prop Abuse - Использование пропов для собственной выгоды, убийства и краш сервера</span>
+                </div>
+                <div class="history-desc">Карается баном от 7 дней до навсегда</div>
+              </div>
+            </div>
+
+            <div class="history-item" data-searchable>
+              <div class="history-icon"><i class="fas fa-sync-alt"></i></div>
+              <div class="history-content">
+                <div class="history-top">
+                  <span class="history-title">Wire Abuse - Использование wiremod для собственной выгоды, убийства и краш сервера</span>
+                </div>
+                <div class="history-desc">Карается баном от 30 дней до навсегда</div>
+              </div>
+            </div>
+
+            <div class="history-item" data-searchable>
+              <div class="history-icon"><i class="fas fa-undo"></i></div>
+              <div class="history-content">
+                <div class="history-top">
+                  <span class="history-title">Vote Abuse - Использовать голосования в пустую или не блогих намерений</span>
+                </div>
+                <div class="history-desc">Карается баном от 5 минут до 1 года</div>
+              </div>
+            </div>
+
+            <div class="history-item" data-searchable>
+              <div class="history-icon"><i class="fas fa-edit"></i></div>
+              <div class="history-content">
+                <div class="history-top">
+                  <span class="history-title">Bug Abuse - Использование багов сервера для собственной выгоды</span>
+                </div>
+                <div class="history-desc">Карается баном от 30 дней до навсегда</div>
+              </div>
+            </div>
+
+            <div class="history-item" data-searchable>
+              <div class="history-icon"><i class="fas fa-trash-alt"></i></div>
+              <div class="history-content">
+                <div class="history-top">
+                  <span class="history-title">Server Features Abuse - Использование фишек сервера для собственной выгоды, убийства и тд</span>
+                </div>
+                <div class="history-desc">Карается баном от 7 дней до навсегда</div>
+              </div>
+            </div>
+
+            <div class="history-item" data-searchable>
+              <div class="history-icon"><i class="fas fa-trash-alt"></i></div>
+              <div class="history-content">
+                <div class="history-top">
+                  <span class="history-title">Правило мести в игровых режимах</span>
+                </div>
+                <div class="history-desc">Карается баном от 3 минут до 60 минут</div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <footer class="wiki-footer">
+      <p>J-CITY Wiki - by Jmeelson's "all copyright have been observed</p>
+    </footer>
+  </div>
+
+  <script>
+    (function() {
+
+      const canvas = document.getElementById('bgCanvas');
+      const ctx = canvas.getContext('2d');
+      let W, H;
+      const xbars = 17, ybars = 30;
+      let animTime = 0;
+      const speed = 30;
+
+      function resize() {
+        W = canvas.width = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+      }
+
+      function drawGrid() {
+        animTime += 0.016;
+        ctx.clearRect(0, 0, W, H);
+        ctx.fillStyle = '#0d0d0f';
+        ctx.fillRect(0, 0, W, H);
+        ctx.strokeStyle = 'rgba(100, 20, 20, 0.12)';
+        ctx.lineWidth = 1;
+
+        for (let i = 1; i <= xbars + 1; i++) {
+          const yPos = (H / xbars) * (i - 1) + (animTime * speed % (H / xbars));
+          ctx.beginPath();
+          ctx.moveTo(0, yPos);
+          ctx.lineTo(W, yPos);
+          ctx.stroke();
+        }
+        for (let i = 1; i <= ybars + 1; i++) {
+          const xPos = (W / ybars) * i - (animTime * speed % (W / ybars));
+          ctx.beginPath();
+          ctx.moveTo(xPos, 0);
+          ctx.lineTo(xPos, H);
+          ctx.stroke();
+        }
+        requestAnimationFrame(drawGrid);
+      }
+
+      window.addEventListener('resize', resize);
+      resize();
+      drawGrid();
+
+      const emojiContainer = document.getElementById('fallingEmojis');
+      const EMOJI_FILES = ['1.png', '2.png', '3.png', '4.png', '5.png', '6.png'];
+      const EMOJI_PATH = 'emoji/';
+      const MAX_EMOJIS = 16;
+
+      function createEmoji() {
+        if (emojiContainer.children.length >= MAX_EMOJIS) return;
+        const img = document.createElement('img');
+        img.src = EMOJI_PATH + EMOJI_FILES[Math.floor(Math.random() * EMOJI_FILES.length)];
+        img.alt = '';
+        img.style.left = Math.random() * 100 + 'vw';
+        const duration = 8 + Math.random() * 10;
+        const delay = Math.random() * 10;
+        const size = 22 + Math.random() * 28;
+        const blurAmount = 0.4 + Math.random() * 1.0;
+        img.style.width = size + 'px';
+        img.style.animationDuration = duration + 's';
+        img.style.animationDelay = delay + 's';
+        img.style.filter = `blur(${blurAmount}px)`;
+        img.style.opacity = 0.18 + Math.random() * 0.14;
+        emojiContainer.appendChild(img);
+
+        const totalLifetime = (duration + delay) * 1000 + 800;
+        setTimeout(() => { if (img.parentNode) img.remove(); }, totalLifetime);
+      }
+
+      function createFallbackEmoji() {
+        if (emojiContainer.children.length >= MAX_EMOJIS) return;
+        const span = document.createElement('span');
+        span.textContent = ['💀', '👁', '🕯', '🩸', '🗝', '🕸'][Math.floor(Math.random() * 6)];
+        span.style.position = 'absolute';
+        span.style.top = '-80px';
+        span.style.left = Math.random() * 100 + 'vw';
+        span.style.fontSize = (22 + Math.random() * 28) + 'px';
+        span.style.opacity = 0.18 + Math.random() * 0.14;
+        span.style.animation = `fall ${8 + Math.random() * 10}s linear ${Math.random() * 10}s infinite`;
+        span.style.filter = 'blur(0.5px)';
+        span.style.userSelect = 'none';
+        emojiContainer.appendChild(span);
+        const lifetime = 20000 + Math.random() * 15000;
+        setTimeout(() => { if (span.parentNode) span.remove(); }, lifetime);
+      }
+
+      let emojiLoadAttempted = false;
+      function initEmojis() {
+        if (emojiLoadAttempted) return;
+        emojiLoadAttempted = true;
+        const testImg = new Image();
+        testImg.onload = () => {
+          for (let i = 0; i < 7; i++) createEmoji();
+          setInterval(createEmoji, 1200);
+        };
+        testImg.onerror = () => {
+          for (let i = 0; i < 7; i++) createFallbackEmoji();
+          setInterval(createFallbackEmoji, 1200);
+        };
+        testImg.src = EMOJI_PATH + EMOJI_FILES[0];
+      }
+      initEmojis();
+
+      const track = document.getElementById('slidesTrack');
+      const slides = Array.from(track.children);
+      const prevBtn = document.getElementById('prevSlide');
+      const nextBtn = document.getElementById('nextSlide');
+      const dots = Array.from(document.querySelectorAll('.dot'));
+
+      let currentIndex = 0;
+      const totalSlides = slides.length;
+
+      function updateSlider() {
+        track.style.transform = `translateX(-${currentIndex * 100}%)`;
+        dots.forEach((dot, i) => dot.classList.toggle('active', i === currentIndex));
+      }
+
+      function nextSlide() {
+        currentIndex = (currentIndex + 1) % totalSlides;
+        updateSlider();
+      }
+
+      function prevSlide() {
+        currentIndex = (currentIndex - 1 + totalSlides) % totalSlides;
+        updateSlider();
+      }
+
+      nextBtn.addEventListener('click', () => { nextSlide(); resetAuto(); });
+      prevBtn.addEventListener('click', () => { prevSlide(); resetAuto(); });
+
+      dots.forEach((dot, i) => {
+        dot.addEventListener('click', () => {
+          currentIndex = i;
+          updateSlider();
+          resetAuto();
+        });
+      });
+
+      let autoInterval = setInterval(nextSlide, 6000);
+
+      function resetAuto() {
+        clearInterval(autoInterval);
+        autoInterval = setInterval(nextSlide, 6000);
+      }
+
+      const sliderSection = document.getElementById('slides');
+      sliderSection.addEventListener('mouseenter', () => clearInterval(autoInterval));
+      sliderSection.addEventListener('mouseleave', resetAuto);
+
+      updateSlider();
+
+      document.querySelectorAll('.sidebar a[href^="#"]').forEach(link => {
+        link.addEventListener('click', function(e) {
+          e.preventDefault();
+          const targetId = this.getAttribute('href').substring(1);
+          const target = document.getElementById(targetId);
+          if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+            this.classList.add('active');
+          }
+        });
+      });
+
+      const sections = document.querySelectorAll('.section-block');
+      const navLinks = document.querySelectorAll('.sidebar a[href^="#"]');
+
+      window.addEventListener('scroll', () => {
+        let current = '';
+        sections.forEach(section => {
+          const sectionTop = section.offsetTop - 120;
+          if (window.scrollY >= sectionTop) current = section.getAttribute('id');
+        });
+        navLinks.forEach(link => {
+          link.classList.remove('active');
+          if (link.getAttribute('href') === '#' + current) link.classList.add('active');
+        });
+      });
+
+      const searchInput = document.getElementById('searchInput');
+      const searchBtn = document.getElementById('searchBtn');
+      const clearSearchBtn = document.getElementById('clearSearch');
+      const searchDropdown = document.getElementById('searchDropdown');
+      const searchInfo = document.getElementById('searchInfo');
+      const searchQueryInfo = document.getElementById('searchQueryInfo');
+      const searchCountInfo = document.getElementById('searchCountInfo');
+      const resetSearchBtn = document.getElementById('resetSearchBtn');
+
+      const searchableItems = [];
+
+      document.querySelectorAll('#slidesTrack .slide').forEach((el, idx) => {
+        const h3 = el.querySelector('h3')?.textContent || '';
+        const p = el.querySelector('p')?.textContent || '';
+        const tag = el.querySelector('.slide-tag')?.textContent || '';
+        searchableItems.push({
+          element: el, type: 'Слайд', typeIcon: 'fa-layer-group',
+          title: h3, text: `${h3} ${p} ${tag}`,
+          sectionId: 'slides', slideIndex: idx
+        });
+      });
+
+      document.querySelectorAll('#articleList .article').forEach(el => {
+        const h3 = el.querySelector('h3')?.textContent || '';
+        const p = el.querySelector('p')?.textContent || '';
+        const meta = el.querySelector('.article-meta')?.textContent || '';
+        searchableItems.push({
+          element: el, type: 'Статья', typeIcon: 'fa-file-alt',
+          title: h3, text: `${h3} ${p} ${meta}`, sectionId: 'articles'
+        });
+      });
+
+      document.querySelectorAll('#historyList .history-item').forEach(el => {
+        const title = el.querySelector('.history-title')?.textContent || '';
+        const desc = el.querySelector('.history-desc')?.textContent || '';
+        const author = el.querySelector('.history-author')?.textContent || '';
+        searchableItems.push({
+          element: el, type: 'История', typeIcon: 'fa-history',
+          title: title, text: `${title} ${desc} ${author}`, sectionId: 'history'
+        });
+      });
+
+      function highlightText(text, query) {
+        if (!query) return text;
+        const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        return text.replace(regex, '<mark>$1</mark>');
+      }
+
+      function truncate(text, maxLen = 90) {
+        if (text.length <= maxLen) return text;
+        return text.substring(0, maxLen).trim() + '…';
+      }
+
+      function escapeHtml(str) {
+        return str.replace(/[&<>"']/g, m => ({
+          '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        })[m]);
+      }
+
+      function performSearch(query) {
+        const q = query.trim().toLowerCase();
+
+        searchableItems.forEach(item => item.element.classList.remove('hidden-by-search'));
+
+        if (!q) {
+          searchDropdown.classList.remove('visible');
+          searchInfo.classList.remove('visible');
+          clearSearchBtn.classList.remove('visible');
+          return;
+        }
+
+        clearSearchBtn.classList.add('visible');
+
+        const matches = searchableItems.filter(item =>
+          item.text.toLowerCase().includes(q)
+        );
+
+        renderDropdown(matches, q);
+
+        searchableItems.forEach(item => {
+          if (!matches.includes(item)) item.element.classList.add('hidden-by-search');
+        });
+
+        searchInfo.classList.add('visible');
+        searchQueryInfo.textContent = query;
+        searchCountInfo.textContent = matches.length;
+
+        const slideMatch = matches.find(m => m.type === 'Слайд');
+        if (slideMatch && slideMatch.slideIndex !== undefined) {
+          currentIndex = slideMatch.slideIndex;
+          updateSlider();
+        }
+      }
+
+      function renderDropdown(matches, query) {
+        if (matches.length === 0) {
+          searchDropdown.innerHTML = `
+            <div class="search-empty">
+              <i class="fas fa-search"></i>
+              Ничего не найдено
+            </div>`;
+          searchDropdown.classList.add('visible');
+          return;
+        }
+
+        const limited = matches.slice(0, 8);
+        searchDropdown.innerHTML = limited.map(item => `
+          <div class="search-result-item" data-section="${item.sectionId}">
+            <i class="fas ${item.typeIcon}"></i>
+            <div class="search-result-content">
+              <div class="search-result-title">${highlightText(item.title, query)}</div>
+              <div class="search-result-desc">${highlightText(truncate(item.text.replace(item.title, '').trim()), query)}</div>
+            </div>
+            <span class="search-result-type">${item.type}</span>
+          </div>
+        `).join('') + (matches.length > 8 ? `
+          <div class="search-result-item" style="justify-content:center; color:rgba(220,60,60,0.9); font-weight:600; font-size:0.78rem; letter-spacing:0.1em; text-transform:uppercase;">
+            и ещё ${matches.length - 8}…
+          </div>` : '');
+
+        searchDropdown.classList.add('visible');
+      }
+
+      searchDropdown.addEventListener('click', (e) => {
+        const item = e.target.closest('.search-result-item');
+        if (!item || !item.dataset.section) return;
+        const sectionId = item.dataset.section;
+        const section = document.getElementById(sectionId);
+        if (section) {
+          section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+          const navLink = document.querySelector(`.sidebar a[href="#${sectionId}"]`);
+          if (navLink) navLink.classList.add('active');
+        }
+        searchDropdown.classList.remove('visible');
+      });
+
+      function resetSearch() {
+        searchInput.value = '';
+        searchDropdown.classList.remove('visible');
+        searchInfo.classList.remove('visible');
+        clearSearchBtn.classList.remove('visible');
+        searchableItems.forEach(item => item.element.classList.remove('hidden-by-search'));
+      }
+
+      searchInput.addEventListener('input', (e) => {
+        const q = e.target.value;
+        if (q.trim()) performSearch(q);
+        else resetSearch();
+      });
+
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          performSearch(searchInput.value);
+          searchDropdown.classList.remove('visible');
+        }
+        if (e.key === 'Escape') searchDropdown.classList.remove('visible');
+      });
+
+      searchBtn.addEventListener('click', () => {
+        performSearch(searchInput.value);
+        searchDropdown.classList.remove('visible');
+      });
+
+      clearSearchBtn.addEventListener('click', resetSearch);
+      resetSearchBtn.addEventListener('click', resetSearch);
+
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.search-wrapper')) searchDropdown.classList.remove('visible');
+      });
+
+      searchInput.addEventListener('focus', () => {
+        if (searchInput.value.trim()) performSearch(searchInput.value);
+      });
+
+      const footerMessages = [
+        'Look behind you.',
+        'Be quiet.',
+        'Welcome to guys)',
+        'Some try...',
+        'Nice music huh?',
+        'fuck old admins',
+        'ritkay is gone...'
+      ];
+      const footerLink = document.querySelector('.wiki-footer a');
+      if (footerLink) {
+        let msgIndex = 0;
+        setInterval(() => {
+          msgIndex = (msgIndex + 1) % footerMessages.length;
+          footerLink.textContent = footerMessages[msgIndex];
+        }, 5000);
+      }
+
+    })();
+  </script>
+</body>
+</html>
